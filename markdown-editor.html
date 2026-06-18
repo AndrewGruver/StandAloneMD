@@ -520,6 +520,9 @@
 </div>
 
 <script>
+const isTestMode =
+  new URLSearchParams(location.search).has('test') || window.__MD_EDITOR_TEST__;
+
 /* ════════════════════════════════════════════════════════
    State
 ════════════════════════════════════════════════════════ */
@@ -578,6 +581,7 @@ const PRINT_FONT_MAX = 24;
 const PRINT_MARGIN_MIN = 0.25;
 const PRINT_MARGIN_MAX = 2;
 
+// SYNC: .build/tests/lib/pure_logic.py
 function clampPrintSettings(s) {
   return {
     fontSizePt: Math.min(PRINT_FONT_MAX, Math.max(PRINT_FONT_MIN, Math.round(s.fontSizePt))),
@@ -700,6 +704,7 @@ cm.on('change', () => {
 const wysiwyg = document.getElementById('wysiwyg');
 const td = new TurndownService({ headingStyle: 'atx', codeBlockStyle: 'fenced', bulletListMarker: '-' });
 
+// SYNC: .build/tests/lib/pure_logic.py
 function isSafeUrl(url) {
   try {
     const u = new URL(url, window.location.href);
@@ -715,8 +720,12 @@ function escapeHtml(text) {
   return el.innerHTML;
 }
 
+function sanitizeMarkdownHtml(md) {
+  return DOMPurify.sanitize(marked.parse(md));
+}
+
 function renderMarkdownToWysiwyg(htmlTarget, md) {
-  htmlTarget.innerHTML = DOMPurify.sanitize(marked.parse(md));
+  htmlTarget.innerHTML = sanitizeMarkdownHtml(md);
 }
 
 
@@ -1104,11 +1113,16 @@ modalSave.addEventListener('click', async () => {
 /* ════════════════════════════════════════════════════════
    Stats
 ════════════════════════════════════════════════════════ */
-function updateStats() {
-  const text = markdownContent;
+// SYNC: .build/tests/lib/pure_logic.py
+function computeStats(text) {
   const words = text.trim() ? text.trim().split(/\s+/).length : 0;
   const chars = text.length;
   const lines = text.split('\n').length;
+  return { words, chars, lines };
+}
+
+function updateStats() {
+  const { words, chars, lines } = computeStats(markdownContent);
   document.getElementById('word-count').textContent = words + (words === 1 ? ' word' : ' words');
   document.getElementById('char-count').textContent = chars + ' chars';
   document.getElementById('line-count').textContent = lines + (lines === 1 ? ' line' : ' lines');
@@ -1146,11 +1160,25 @@ document.addEventListener('keydown', (e) => {
 /* ════════════════════════════════════════════════════════
    Init
 ════════════════════════════════════════════════════════ */
-renderWYSIWYG();
-updateStats();
-setFilename('Untitled.md');
-setDirty(false);
-wysiwyg.focus();
+if (isTestMode) {
+  window.__mdEditor = {
+    isSafeUrl,
+    clampPrintSettings,
+    computeStats,
+    sanitizeMarkdownHtml,
+    renderMarkdownToWysiwyg,
+    getMarkdownContent: () => markdownContent,
+    setMarkdownContent: (md) => { markdownContent = md; },
+    setMode,
+  };
+  window.__mdEditorReady = true;
+} else {
+  renderWYSIWYG();
+  updateStats();
+  setFilename('Untitled.md');
+  setDirty(false);
+  wysiwyg.focus();
+}
 </script>
 </body>
 </html>
