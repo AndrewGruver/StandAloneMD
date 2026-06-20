@@ -201,6 +201,9 @@
   #editor-area.split-mode #cm-wrapper {
     border-right: 1px solid var(--border);
   }
+  #editor-area.split-mode #wysiwyg-wrapper {
+    justify-content: flex-start;
+  }
   #editor-area.split-mode #wysiwyg-page {
     margin: 16px 8px;
   }
@@ -396,8 +399,13 @@
     body { background: #fff !important; color: #111 !important; height: auto !important; }
     #toolbar, #statusbar, #print-settings-popover { display: none !important; }
     #editor-area { display: block !important; overflow: visible !important; height: auto !important; }
+    #editor-area.split-mode { display: block !important; }
+    #editor-area.split-mode #wysiwyg-wrapper {
+      width: 100% !important;
+      flex: none !important;
+    }
     #cm-wrapper { display: none !important; }
-    #wysiwyg-wrapper { display: block !important; overflow: visible !important; height: auto !important; }
+    #wysiwyg-wrapper { display: block !important; overflow: visible !important; height: auto !important; width: 100% !important; }
     #wysiwyg-margin-guides { display: none !important; }
     #wysiwyg-page {
       width: auto !important;
