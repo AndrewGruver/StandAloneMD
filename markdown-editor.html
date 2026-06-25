@@ -950,6 +950,28 @@
       font-size: 1.2em;
     }
 
+    .preview-prose h4 {
+      font-size: 1.05em;
+    }
+
+    .preview-page-break-marker {
+      break-before: page;
+      page-break-before: always;
+      border-top: 2px dashed #bbb;
+      margin: 0 0 1em;
+      padding-top: 0.35em;
+      text-align: center;
+      font-size: 0.7em;
+      color: #888;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    .preview-page-break-marker::before {
+      content: 'Page break';
+    }
+
     .preview-prose p {
       margin: 0.75em 0;
     }
@@ -1330,6 +1352,10 @@
       #preview-print td {
         border-color: #ccc !important;
       }
+
+      .preview-page-break-marker {
+        display: none !important;
+      }
     }
   </style>
 </head>
@@ -1390,6 +1416,14 @@
       <button class="tb-btn" id="btn-h1" title="Heading 1" style="font-weight:700; font-size:12px;">H1</button>
       <button class="tb-btn" id="btn-h2" title="Heading 2" style="font-weight:700; font-size:12px;">H2</button>
       <button class="tb-btn" id="btn-h3" title="Heading 3" style="font-weight:700; font-size:12px;">H3</button>
+      <button class="tb-btn" id="btn-h4" title="Heading 4" style="font-weight:700; font-size:12px;">H4</button>
+      <button class="tb-btn" id="btn-page-break" title="Page break (HTML — not native Markdown)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="1" width="5" height="14" rx="0.5" />
+          <rect x="9" y="1" width="5" height="14" rx="0.5" />
+          <line x1="8" y1="3" x2="8" y2="13" stroke-dasharray="1.5 1.5" />
+        </svg>
+      </button>
       <button class="tb-btn" id="btn-ul" title="Bullet List">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="2.5" cy="4.5" r="1" fill="currentColor" stroke="none" />
@@ -1594,6 +1628,12 @@ Start editing above — enjoy writing!
   let currentMode = 'split'; // 'preview' | 'markdown' | 'split'
   let pendingAction = null; // callback after modal confirm
   let syncLock = false;
+  let saveInFlight = null;
+
+  const PAGE_BREAK_MARKDOWN =
+    '<div style="break-before: page; page-break-before: always;"></div>';
+  const PAGE_BREAK_MARKER =
+    '<div class="preview-page-break-marker" role="separator" aria-label="Page break"></div>';
   let splitPreviewTimer = null;
 
   /* ════════════════════════════════════════════════════════
@@ -1717,7 +1757,6 @@ Start editing above — enjoy writing!
     lineWrapping: true,
     autofocus: false,
     extraKeys: {
-      'Ctrl-S': () => saveFile(),
       'Ctrl-B': () => wrapSelection(cm, '**', '**'),
       'Ctrl-I': () => wrapSelection(cm, '*', '*'),
       'Ctrl-K': () => insertLink(),
@@ -1754,6 +1793,18 @@ Start editing above — enjoy writing!
     const el = document.createElement('span');
     el.textContent = text;
     return el.innerHTML;
+  }
+
+  // SYNC: .build/tests/lib/pure_logic.py
+  function isPageBreakBlock(blockHtml) {
+    const temp = document.createElement('div');
+    temp.innerHTML = blockHtml;
+    if (temp.children.length !== 1) return false;
+    const el = temp.firstElementChild;
+    if (el.tagName !== 'DIV') return false;
+    const style = (el.getAttribute('style') || '').toLowerCase();
+    if (!style.includes('page-break-before') && !style.includes('break-before')) return false;
+    return el.textContent.trim() === '' && el.children.length === 0;
   }
 
   function sanitizeMarkdownHtml(md) {
@@ -1808,6 +1859,11 @@ Start editing above — enjoy writing!
     let currentHtml = '';
 
     for (const blockHtml of blocks) {
+      if (isPageBreakBlock(blockHtml)) {
+        if (currentHtml) pages.push(currentHtml);
+        currentHtml = PAGE_BREAK_MARKER;
+        continue;
+      }
       const testHtml = currentHtml + blockHtml;
       bucket.innerHTML = testHtml;
       if (currentHtml && bucket.scrollHeight > pageHeight) {
@@ -1969,6 +2025,14 @@ Start editing above — enjoy writing!
     cm.focus();
   }
 
+  function insertPageBreak() {
+    if (currentMode === 'preview') return;
+    const cur = cm.getCursor();
+    const prefix = cur.ch > 0 ? '\n' : '';
+    cm.replaceRange(prefix + PAGE_BREAK_MARKDOWN + '\n', cur);
+    cm.focus();
+  }
+
   function insertLink() {
     if (currentMode === 'preview') return;
     const url = prompt('URL:', 'https://');
@@ -2006,6 +2070,8 @@ Start editing above — enjoy writing!
   document.getElementById('btn-h1').addEventListener('click', () => insertHeading(1));
   document.getElementById('btn-h2').addEventListener('click', () => insertHeading(2));
   document.getElementById('btn-h3').addEventListener('click', () => insertHeading(3));
+  document.getElementById('btn-h4').addEventListener('click', () => insertHeading(4));
+  document.getElementById('btn-page-break').addEventListener('click', insertPageBreak);
   document.getElementById('btn-ul').addEventListener('click', () => formatAction('insertUnorderedList'));
   document.getElementById('btn-ol').addEventListener('click', () => formatAction('insertOrderedList'));
   document.getElementById('btn-quote').addEventListener('click', insertBlockquote);
@@ -2103,31 +2169,39 @@ Start editing above — enjoy writing!
   });
 
   async function saveFile() {
-    if (currentMode === 'markdown' || currentMode === 'split') {
-      markdownContent = cm.getValue();
-    }
-
-    if (window.showSaveFilePicker) {
-      try {
-        if (!fileHandle) {
-          fileHandle = await window.showSaveFilePicker({
-            suggestedName: currentFilename,
-            types: [{ description: 'Markdown file', accept: { 'text/markdown': ['.md'] } }]
-          });
-          setFilename(fileHandle.name);
-        }
-        const writable = await fileHandle.createWritable();
-        await writable.write(markdownContent);
-        await writable.close();
-        setDirty(false);
-        return true;
-      } catch (err) {
-        if (err.name !== 'AbortError') fallbackSave();
-        return false;
+    if (saveInFlight) return saveInFlight;
+    saveInFlight = (async () => {
+      if (currentMode === 'markdown' || currentMode === 'split') {
+        markdownContent = cm.getValue();
       }
-    } else {
-      fallbackSave();
-      return true;
+
+      if (window.showSaveFilePicker) {
+        try {
+          if (!fileHandle) {
+            fileHandle = await window.showSaveFilePicker({
+              suggestedName: currentFilename,
+              types: [{ description: 'Markdown file', accept: { 'text/markdown': ['.md'] } }]
+            });
+            setFilename(fileHandle.name);
+          }
+          const writable = await fileHandle.createWritable();
+          await writable.write(markdownContent);
+          await writable.close();
+          setDirty(false);
+          return true;
+        } catch (err) {
+          if (err.name !== 'AbortError') fallbackSave();
+          return false;
+        }
+      } else {
+        fallbackSave();
+        return true;
+      }
+    })();
+    try {
+      return await saveInFlight;
+    } finally {
+      saveInFlight = null;
     }
   }
 
@@ -2275,6 +2349,7 @@ Start editing above — enjoy writing!
   if (isTestMode) {
     window.__mdEditor = {
       isSafeUrl,
+      isPageBreakBlock,
       clampPrintSettings,
       computeStats,
       sanitizeMarkdownHtml,
