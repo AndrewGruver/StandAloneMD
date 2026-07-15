@@ -1399,6 +1399,16 @@
         </svg>
         Save
       </button>
+      <button class="tb-btn" id="btn-save-as" title="Save As (Ctrl+Shift+S)">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="2" y="2" width="12" height="12" rx="1" />
+          <rect x="5" y="2" width="6" height="5" rx="0.5" />
+          <rect x="4" y="9" width="8" height="4" rx="0.5" />
+          <line x1="12" y1="1" x2="12" y2="5" />
+          <line x1="10" y1="3" x2="14" y2="3" />
+        </svg>
+        Save As
+      </button>
       <button class="tb-btn" id="btn-clear" title="Clear document">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
           <path d="M3 4h10" />
@@ -1701,6 +1711,7 @@ This page starts after a **page break**. Insert one with **Ctrl+Enter** or the t
 | New document | **Ctrl+N** |
 | Open file | **Ctrl+O** |
 | Save | **Ctrl+S** |
+| Save As | **Ctrl+Shift+S** |
 | Print / PDF | **Ctrl+P** |
 
 Clear (toolbar) empties the document after confirm. New / Open warn if you have unsaved changes.
@@ -2303,7 +2314,14 @@ Edit this document freely, or use **Clear** / **Ctrl+N** when you are ready to s
     e.target.value = '';
   });
 
-  async function saveFile() {
+  function normalizeSaveFilename(name) {
+    const trimmed = (name || '').trim();
+    if (!trimmed) return null;
+    if (/\.(md|txt)$/i.test(trimmed)) return trimmed;
+    return trimmed + '.md';
+  }
+
+  async function saveFile({ forcePicker = false } = {}) {
     if (saveInFlight) return saveInFlight;
     saveInFlight = (async () => {
       if (currentMode === 'markdown' || currentMode === 'split') {
@@ -2312,7 +2330,7 @@ Edit this document freely, or use **Clear** / **Ctrl+N** when you are ready to s
 
       if (window.showSaveFilePicker) {
         try {
-          if (!fileHandle) {
+          if (!fileHandle || forcePicker) {
             fileHandle = await window.showSaveFilePicker({
               suggestedName: currentFilename,
               types: [{ description: 'Markdown file', accept: { 'text/markdown': ['.md'] } }]
@@ -2329,6 +2347,13 @@ Edit this document freely, or use **Clear** / **Ctrl+N** when you are ready to s
           return false;
         }
       } else {
+        if (forcePicker) {
+          const chosen = prompt('Save as', currentFilename);
+          if (chosen === null) return false;
+          const name = normalizeSaveFilename(chosen);
+          if (!name) return false;
+          setFilename(name);
+        }
         fallbackSave();
         return true;
       }
@@ -2338,6 +2363,10 @@ Edit this document freely, or use **Clear** / **Ctrl+N** when you are ready to s
     } finally {
       saveInFlight = null;
     }
+  }
+
+  function saveFileAs() {
+    return saveFile({ forcePicker: true });
   }
 
   function fallbackSave() {
@@ -2353,6 +2382,7 @@ Edit this document freely, or use **Clear** / **Ctrl+N** when you are ready to s
   document.getElementById('btn-new').addEventListener('click', newFile);
   document.getElementById('btn-open').addEventListener('click', openFile);
   document.getElementById('btn-save').addEventListener('click', saveFile);
+  document.getElementById('btn-save-as').addEventListener('click', saveFileAs);
   document.getElementById('btn-clear').addEventListener('click', clearDocument);
 
   /* ════════════════════════════════════════════════════════
@@ -2463,6 +2493,11 @@ Edit this document freely, or use **Clear** / **Ctrl+N** when you are ready to s
     if (e.ctrlKey || e.metaKey) {
       // Format chords first (may include Alt/Shift); skip bare N/O/S/P when Alt/Shift held
       if (tryFormatHotkey(e)) return;
+      if (e.shiftKey && !e.altKey && e.key.toLowerCase() === 's') {
+        e.preventDefault();
+        saveFileAs();
+        return;
+      }
       if (!e.altKey && !e.shiftKey) {
         if (e.key === 's') { e.preventDefault(); saveFile(); }
         if (e.key === 'o') { e.preventDefault(); openFile(); }
