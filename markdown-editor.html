@@ -1422,18 +1422,18 @@
       </button>
       <button class="tb-btn" id="btn-italic" title="Italic (Ctrl+I)"
         style="font-style:italic; font-weight:600; font-family:Georgia,serif; font-size:15px;">I</button>
-      <button class="tb-btn" id="btn-h1" title="Heading 1" style="font-weight:700; font-size:12px;">H1</button>
-      <button class="tb-btn" id="btn-h2" title="Heading 2" style="font-weight:700; font-size:12px;">H2</button>
-      <button class="tb-btn" id="btn-h3" title="Heading 3" style="font-weight:700; font-size:12px;">H3</button>
-      <button class="tb-btn" id="btn-h4" title="Heading 4" style="font-weight:700; font-size:12px;">H4</button>
-      <button class="tb-btn" id="btn-page-break" title="Page break (HTML — not native Markdown)">
+      <button class="tb-btn" id="btn-h1" title="Heading 1 (Ctrl+Alt+1)" style="font-weight:700; font-size:12px;">H1</button>
+      <button class="tb-btn" id="btn-h2" title="Heading 2 (Ctrl+Alt+2)" style="font-weight:700; font-size:12px;">H2</button>
+      <button class="tb-btn" id="btn-h3" title="Heading 3 (Ctrl+Alt+3)" style="font-weight:700; font-size:12px;">H3</button>
+      <button class="tb-btn" id="btn-h4" title="Heading 4 (Ctrl+Alt+4)" style="font-weight:700; font-size:12px;">H4</button>
+      <button class="tb-btn" id="btn-page-break" title="Page break (Ctrl+Enter) — HTML, not native Markdown">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
           <rect x="2" y="1" width="5" height="14" rx="0.5" />
           <rect x="9" y="1" width="5" height="14" rx="0.5" />
           <line x1="8" y1="3" x2="8" y2="13" stroke-dasharray="1.5 1.5" />
         </svg>
       </button>
-      <button class="tb-btn" id="btn-ul" title="Bullet List">
+      <button class="tb-btn" id="btn-ul" title="Bullet List (Ctrl+Shift+8)">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
           <circle cx="2.5" cy="4.5" r="1" fill="currentColor" stroke="none" />
           <line x1="5" y1="4.5" x2="14" y2="4.5" />
@@ -1443,7 +1443,7 @@
           <line x1="5" y1="12.5" x2="14" y2="12.5" />
         </svg>
       </button>
-      <button class="tb-btn" id="btn-ol" title="Numbered List">
+      <button class="tb-btn" id="btn-ol" title="Numbered List (Ctrl+Shift+7)">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><text x="1" y="5.5" font-size="5"
             fill="currentColor" stroke="none" font-family="sans-serif">1.</text>
           <line x1="6" y1="4.5" x2="14" y2="4.5" /><text x="1" y="9.5" font-size="5" fill="currentColor" stroke="none"
@@ -1453,12 +1453,12 @@
           <line x1="6" y1="12.5" x2="14" y2="12.5" />
         </svg>
       </button>
-      <button class="tb-btn" id="btn-quote" title="Blockquote">
+      <button class="tb-btn" id="btn-quote" title="Blockquote (Ctrl+Shift+Q)">
         <svg viewBox="0 0 16 16" fill="currentColor">
           <path d="M4 3h1v4H4zm-1 4h3l-1 3H4zm6-4h1v4h-1zm-1 4h3l-1 3h-1z" />
         </svg>
       </button>
-      <button class="tb-btn" id="btn-code" title="Code">
+      <button class="tb-btn" id="btn-code" title="Code (Ctrl+E)">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
           <polyline points="5,4 1,8 5,12" />
           <polyline points="11,4 15,8 11,12" />
@@ -1593,42 +1593,131 @@
   ════════════════════════════════════════════════════════ */
   let markdownContent = `# Welcome to Markdown Editor
 
-A clean, distraction-free editor with **Split view** for editing and a paginated print preview.
+A clean, distraction-free editor. **Split** (default) shows Markdown on the left and a paginated print preview on the right. Use this cheat sheet to try formatting — shortcuts work in Markdown and Split modes (not Preview).
 
-## Features
+## Inline formatting
 
-- **Split** (default): edit Markdown on the left, live paginated preview on the right
-- **Preview** mode: full-width read-only paginated layout
-- Open and save \`.md\` files from your computer
-- Print or export to PDF with a clean layout
+| Effect | Markdown | Shortcut |
+|--------|----------|----------|
+| **Bold** | \`**text**\` | **Ctrl+B** |
+| *Italic* | \`*text*\` | **Ctrl+I** |
+| \`Inline code\` | backticks | **Ctrl+E** (or toolbar) |
+| [Link](https://example.com) | \`[label](url)\` | **Ctrl+K** |
+
+You can combine emphasis: ***bold italic*** and **bold with *nested* italic**.
+
+Select text first, then press the shortcut (or use the toolbar) to wrap it.
+
+---
+
+## Features at a glance
+
+- **Split** (default): edit left, live paginated preview right
+- **Preview**: full-width read-only stacked pages
+- **Markdown**: raw CodeMirror editing
+- Open / save \`.md\` files; print or export to PDF
 - Full formatting toolbar in Markdown and Split modes
 
-## Markdown Basics
+<div style="break-before: page; page-break-before: always;"></div>
 
-**Bold** and *italic* text work as expected.
+# Block structure
 
-### Code
+Headings: **Ctrl+Alt+1** through **Ctrl+Alt+4** (or toolbar H1–H4).
 
-Inline \`code\` and fenced blocks:
+# Heading 1
+## Heading 2
+### Heading 3
+#### Heading 4
+
+## Lists
+
+Bullet list (**Ctrl+Shift+8**):
+
+- First item
+- Second item
+  - Nested item
+  - Another nested item
+- Back to top level
+
+Numbered list (**Ctrl+Shift+7**):
+
+1. First step
+2. Second step
+3. Third step
+
+## Blockquote
+
+**Ctrl+Shift+Q** prefixes the line with \`>\`:
+
+> The best writing is rewriting. — E.B. White
+
+## Code blocks
+
+**Ctrl+E** wraps a selection in fences (multi-line) or backticks (single line):
 
 \`\`\`javascript
 const greet = (name) => \`Hello, \${name}!\`;
 console.log(greet('world'));
 \`\`\`
 
-### Blockquote
+## Format shortcut summary
 
-> The best writing is rewriting. — E.B. White
+| Action | Shortcut |
+|--------|----------|
+| Bold / Italic / Link | **Ctrl+B** / **Ctrl+I** / **Ctrl+K** |
+| Code | **Ctrl+E** |
+| Heading 1–4 | **Ctrl+Alt+1** … **Ctrl+Alt+4** |
+| Bullet / Numbered list | **Ctrl+Shift+8** / **Ctrl+Shift+7** |
+| Blockquote | **Ctrl+Shift+Q** |
+| Page break | **Ctrl+Enter** |
 
-### Lists
+## GFM extras (type in Markdown — no shortcut)
 
-1. Ordered lists
-2. Unordered lists
-3. Nested items
+~~Strikethrough~~ with \`~~text~~\`.
+
+Task list:
+
+- [x] Checked item
+- [ ] Unchecked item
+
+Table:
+
+| Syntax | Result |
+|--------|--------|
+| \`**bold**\` | **bold** |
+| \`*italic*\` | *italic* |
+| backticks around text | \`code\` |
+
+<div style="break-before: page; page-break-before: always;"></div>
+
+# App shortcuts & page breaks
+
+This page starts after a **page break**. Insert one with **Ctrl+Enter** or the toolbar page-break button (raw HTML — not native Markdown). The preview shows a dashed marker between sheets.
+
+## File & print
+
+| Action | Shortcut |
+|--------|----------|
+| New document | **Ctrl+N** |
+| Open file | **Ctrl+O** |
+| Save | **Ctrl+S** |
+| Print / PDF | **Ctrl+P** |
+
+Clear (toolbar) empties the document after confirm. New / Open warn if you have unsaved changes.
+
+## Modes
+
+| Mode | How | Notes |
+|------|-----|-------|
+| Split | Toolbar | Default — edit + preview |
+| Markdown | Toolbar | Raw editor only |
+| Preview | Toolbar | Read-only; format shortcuts disabled |
+
+Print layout (font size, margins) is under the page-icon button next to Print.
 
 ---
 
-Start editing above — enjoy writing!
+Edit this document freely, or use **Clear** / **Ctrl+N** when you are ready to start fresh.
 `;
 
   let currentFilename = 'Untitled.md';
@@ -1765,11 +1854,9 @@ Start editing above — enjoy writing!
     theme: 'nord',
     lineWrapping: true,
     autofocus: false,
-    extraKeys: {
-      'Ctrl-B': () => wrapSelection(cm, '**', '**'),
-      'Ctrl-I': () => wrapSelection(cm, '*', '*'),
-      'Ctrl-K': () => insertLink(),
-    },
+    // Format hotkeys live in the global keydown handler (tryFormatHotkey) so
+    // toolbar actions and CM focus share one path without double-wrapping.
+    extraKeys: {},
     value: markdownContent,
   });
 
@@ -2087,6 +2174,45 @@ Start editing above — enjoy writing!
   document.getElementById('btn-code').addEventListener('click', insertCode);
   document.getElementById('btn-link').addEventListener('click', insertLink);
 
+  /** Returns a format action for a Ctrl/Cmd chord, or null. Uses e.code for Shift+digit reliability. */
+  function matchFormatHotkey(e) {
+    if (!(e.ctrlKey || e.metaKey)) return null;
+    const code = e.code;
+    if (e.altKey && !e.shiftKey) {
+      if (code === 'Digit1') return () => insertHeading(1);
+      if (code === 'Digit2') return () => insertHeading(2);
+      if (code === 'Digit3') return () => insertHeading(3);
+      if (code === 'Digit4') return () => insertHeading(4);
+      return null;
+    }
+    if (e.shiftKey && !e.altKey) {
+      if (code === 'Digit8') return () => formatAction('insertUnorderedList');
+      if (code === 'Digit7') return () => formatAction('insertOrderedList');
+      if (code === 'KeyQ') return () => insertBlockquote();
+      return null;
+    }
+    if (!e.altKey && !e.shiftKey) {
+      if (code === 'KeyB') return () => formatAction('bold');
+      if (code === 'KeyI') return () => formatAction('italic');
+      if (code === 'KeyK') return () => insertLink();
+      if (code === 'KeyE') return () => insertCode();
+      if (code === 'Enter') return () => insertPageBreak();
+    }
+    return null;
+  }
+
+  /** Handle format chord: always preventDefault when matched; run only outside Preview / print inputs. */
+  function tryFormatHotkey(e) {
+    const action = matchFormatHotkey(e);
+    if (!action) return false;
+    e.preventDefault();
+    if (currentMode === 'preview') return true;
+    const t = e.target;
+    if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT')) return true;
+    action();
+    return true;
+  }
+
   /* ════════════════════════════════════════════════════════
      File operations
   ════════════════════════════════════════════════════════ */
@@ -2335,15 +2461,14 @@ Start editing above — enjoy writing!
   ════════════════════════════════════════════════════════ */
   document.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey) {
-      if (e.key === 's') { e.preventDefault(); saveFile(); }
-      if (e.key === 'o') { e.preventDefault(); openFile(); }
-      if (e.key === 'n') { e.preventDefault(); newFile(); }
-      if (e.key === 'p') { e.preventDefault(); document.getElementById('btn-print').click(); }
-      // Format shortcuts disabled in read-only preview mode
-      // but we re-bind for consistency in both modes
-      if (e.key === 'b' && currentMode === 'preview') { e.preventDefault(); }
-      if (e.key === 'i' && currentMode === 'preview') { e.preventDefault(); }
-      if (e.key === 'k' && currentMode === 'preview') { e.preventDefault(); }
+      // Format chords first (may include Alt/Shift); skip bare N/O/S/P when Alt/Shift held
+      if (tryFormatHotkey(e)) return;
+      if (!e.altKey && !e.shiftKey) {
+        if (e.key === 's') { e.preventDefault(); saveFile(); }
+        if (e.key === 'o') { e.preventDefault(); openFile(); }
+        if (e.key === 'n') { e.preventDefault(); newFile(); }
+        if (e.key === 'p') { e.preventDefault(); document.getElementById('btn-print').click(); }
+      }
     }
     // ESC closes modal and print settings popover
     if (e.key === 'Escape') {
