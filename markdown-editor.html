@@ -2388,13 +2388,38 @@ Edit this document freely, or use **Clear** / **Ctrl+N** when you are ready to s
   /* ════════════════════════════════════════════════════════
      Print / PDF
   ════════════════════════════════════════════════════════ */
+  /** Stem for Save-as-PDF suggested name (browsers use document.title). */
+  function pdfTitleFromFilename(name) {
+    const base = String(name || 'Untitled').replace(/\.(md|markdown|txt)$/i, '');
+    return base || 'Untitled';
+  }
+
+  function withPrintPdfTitle(fn) {
+    const prevTitle = document.title;
+    document.title = pdfTitleFromFilename(currentFilename);
+    let restored = false;
+    const restore = () => {
+      if (restored) return;
+      restored = true;
+      document.title = prevTitle;
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore);
+    try {
+      fn();
+    } finally {
+      // afterprint may not fire in every browser / cancel path
+      setTimeout(restore, 2000);
+    }
+  }
+
   document.getElementById('btn-print').addEventListener('click', () => {
     const prevMode = currentMode;
     if (currentMode === 'markdown' || currentMode === 'split') {
       markdownContent = cm.getValue();
     }
     renderPaginatedPreview(markdownContent);
-    window.print();
+    withPrintPdfTitle(() => window.print());
     if (prevMode === 'markdown') setMode('markdown');
     else if (prevMode === 'split') setMode('split');
     else if (prevMode === 'preview') setMode('preview');
